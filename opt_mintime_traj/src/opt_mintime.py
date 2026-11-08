@@ -6,6 +6,11 @@ import casadi as ca
 import opt_mintime_traj
 import trajectory_planning_helpers as tph
 
+ca.GlobalOptions.setNumpyMode(1)
+
+def _cat_objs(a: np.ndarray) -> np.ndarray:
+    return ca.evalf(np.array([v for r in a for v in r], dtype=object))
+
 
 def opt_mintime(reftrack: np.ndarray,
                 coeffs_x: np.ndarray,
@@ -847,10 +852,10 @@ def opt_mintime(reftrack: np.ndarray,
     w = ca.vertcat(*w)
     g = ca.vertcat(*g)
     w0 = np.concatenate(w0)
-    lbw = np.concatenate(lbw)
-    ubw = np.concatenate(ubw)
-    lbg = np.concatenate(lbg)
-    ubg = np.concatenate(ubg)
+    lbw = _cat_objs(lbw)
+    ubw = _cat_objs(ubw)
+    lbg = _cat_objs(lbg)
+    ubg = _cat_objs(ubg)
 
     # concatenate output vectors
     x_opt = ca.vertcat(*x_opt)
@@ -914,17 +919,16 @@ def opt_mintime(reftrack: np.ndarray,
     t0 = time.perf_counter()
 
     # solve NLP
-    if pars["optim_opts"]["warm_start"]:
-        sol = solver(x0=w0, lbx=lbw, ubx=ubw, lbg=lbg, ubg=ubg, lam_x0=lam_x0, lam_g0=lam_g0)
-    else:
-        sol = solver(x0=w0, lbx=lbw, ubx=ubw, lbg=lbg, ubg=ubg)
+    try:
+        if pars["optim_opts"]["warm_start"]:
+            sol = solver(x0=w0, lbx=lbw, ubx=ubw, lbg=lbg, ubg=ubg, lam_x0=lam_x0, lam_g0=lam_g0)
+        else:
+            sol = solver(x0=w0, lbx=lbw, ubx=ubw, lbg=lbg, ubg=ubg)
+    except RuntimeError as e:
+        raise ValueError('\033[91m' + 'ERROR: Optimization did not succeed!' + '\033[0m') from e
 
     # end time measure
     tend = time.perf_counter()
-
-    if solver.stats()['return_status'] != 'Solve_Succeeded':
-        print('\033[91m' + 'ERROR: Optimization did not succeed!' + '\033[0m')
-        sys.exit(1)
 
     # ------------------------------------------------------------------------------------------------------------------
     # EXTRACT SOLUTION -------------------------------------------------------------------------------------------------
@@ -958,25 +962,25 @@ def opt_mintime(reftrack: np.ndarray,
     x_opt, u_opt, tf_opt, dt_opt, ax_opt, ay_opt, ec_opt = f_sol(sol['x'])
 
     # solution for state variables
-    x_opt = np.reshape(x_opt, (N + 1, nx))
+    x_opt = np.array(np.reshape(x_opt, (N + 1, nx)))
 
     # solution for control variables
-    u_opt = np.reshape(u_opt, (N, nu))
+    u_opt = np.array(np.reshape(u_opt, (N, nu)))
 
     # solution for tire forces
-    tf_opt = np.append(tf_opt[-12:], tf_opt[:])
-    tf_opt = np.reshape(tf_opt, (N + 1, 12))
+    tf_opt = np.array(np.append(tf_opt[-12:], tf_opt[:]))
+    tf_opt = np.array(np.reshape(tf_opt, (N + 1, 12)))
 
     # solution for time
-    t_opt = np.hstack((0.0, np.cumsum(dt_opt)))
+    t_opt = np.array(np.hstack((0.0, np.cumsum(dt_opt))))
 
     # solution for acceleration
-    ax_opt = np.append(ax_opt[-1], ax_opt)
-    ay_opt = np.append(ay_opt[-1], ay_opt)
+    ax_opt = np.array(np.append(ax_opt[-1], ax_opt))
+    ay_opt = np.array(np.append(ay_opt[-1], ay_opt))
     atot_opt = np.sqrt(np.power(ax_opt, 2) + np.power(ay_opt, 2))
 
     # solution for energy consumption
-    ec_opt_cum = np.hstack((0.0, np.cumsum(ec_opt))) / 3600.0
+    ec_opt_cum = np.array(np.hstack((0.0, np.cumsum(ec_opt))) / 3600.0)
 
     # ------------------------------------------------------------------------------------------------------------------
     # EXPORT SOLUTION --------------------------------------------------------------------------------------------------
