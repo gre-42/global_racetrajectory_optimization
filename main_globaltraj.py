@@ -1,14 +1,17 @@
-import opt_mintime_traj
-import numpy as np
-import time
+import configparser
+import copy
 import json
 import os
-import trajectory_planning_helpers as tph
-import copy
+import time
+from importlib.metadata import PackageNotFoundError, version
+
 import matplotlib.pyplot as plt
-import configparser
-import pkg_resources
+import numpy as np
+import trajectory_planning_helpers as tph
+from packaging.requirements import Requirement
+
 import helper_funcs_glob
+import opt_mintime_traj
 
 """
 Created by:
@@ -103,15 +106,27 @@ file_paths["module"] = os.path.dirname(os.path.abspath(__file__))
 requirements_path = os.path.join(file_paths["module"], 'requirements.txt')
 dependencies = []
 
-with open(requirements_path, 'r') as fh:
-    line = fh.readline()
-
-    while line:
-        dependencies.append(line.rstrip())
-        line = fh.readline()
-
 # check dependencies
-pkg_resources.require(dependencies)
+with open(requirements_path, 'r') as file:
+    for line in file:
+        l = line.strip()
+        if l == '' or l.startswith('#'):
+            continue
+        dependencies.append(l)
+
+for dep in dependencies:
+    req = Requirement(dep)
+    try:
+        installed_version = version(req.name)
+        
+        if not req.specifier.contains(installed_version, prereleases=True):
+            raise RuntimeError(
+                f'Version Conflict: "{req.name}" "{installed_version}" is installed, '
+                f'but {dep} is required.'
+            )
+            
+    except PackageNotFoundError:
+        raise RuntimeError(f'Missing Dependency: "{req.name}" is not installed.')
 
 # ----------------------------------------------------------------------------------------------------------------------
 # INITIALIZATION OF PATHS ----------------------------------------------------------------------------------------------
