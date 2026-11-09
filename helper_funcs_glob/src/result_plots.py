@@ -1,3 +1,5 @@
+import os.path
+
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -69,7 +71,7 @@ def result_plots(plot_opts: dict,
         ax.set_aspect("equal", "datalim")
         plt.xlabel("east in m")
         plt.ylabel("north in m")
-        plt.show()
+        plt.savefig(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'outputs', 'raceline.svg'))
 
     if plot_opts["raceline_curv"]:
         # plot curvature profile
@@ -78,7 +80,7 @@ def result_plots(plot_opts: dict,
         plt.grid()
         plt.xlabel("distance in m")
         plt.ylabel("curvature in rad/m")
-        plt.show()
+        plt.savefig(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'outputs', 'raceline_curv.svg'))
 
     if plot_opts["racetraj_vel_3d"]:
         scale_x = 1.0
@@ -134,7 +136,7 @@ def result_plots(plot_opts: dict,
             # increment index
             cur_ind += ind_stepsize
 
-        plt.show()
+        plt.savefig(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'outputs', 'racetraj_vel_3d.svg'))
 
     if plot_opts["spline_normals"]:
         plt.figure()
@@ -150,7 +152,7 @@ def result_plots(plot_opts: dict,
         plt.xlabel("east in m")
         plt.ylabel("north in m")
 
-        plt.show()
+        plt.savefig(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'outputs', 'spline_normals.svg'))
 
 
 # testing --------------------------------------------------------------------------------------------------------------
