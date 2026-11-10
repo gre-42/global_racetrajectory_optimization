@@ -177,6 +177,7 @@ pars = {}
 if not parser.read(os.path.join(file_paths["module"], "params", file_paths["veh_params_file"])):
     raise ValueError('Specified config file does not exist or is empty!')
 
+pars["closed"] = json.loads(parser.get('CUSTOM_OPTIONS', 'closed'))
 pars["ggv_file"] = json.loads(parser.get('GENERAL_OPTIONS', 'ggv_file'))
 pars["ax_max_machines_file"] = json.loads(parser.get('GENERAL_OPTIONS', 'ax_max_machines_file'))
 pars["stepsize_opts"] = json.loads(parser.get('GENERAL_OPTIONS', 'stepsize_opts'))
@@ -259,7 +260,8 @@ reftrack_interp, normvec_normalized_interp, a_interp, coeffs_x_interp, coeffs_y_
                                                 reg_smooth_opts=pars["reg_smooth_opts"],
                                                 stepsize_opts=pars["stepsize_opts"],
                                                 debug=debug,
-                                                min_width=imp_opts["min_track_width"])
+                                                min_width=imp_opts["min_track_width"],
+                                                closed=pars["closed"])
 
 # ----------------------------------------------------------------------------------------------------------------------
 # CALL OPTIMIZATION ----------------------------------------------------------------------------------------------------
@@ -317,7 +319,8 @@ elif opt_type == 'mintime':
                     tpadata_path=file_paths["tpadata"],
                     export_path=file_paths["mintime_export"],
                     print_debug=debug,
-                    plot_debug=plot_opts["mintime_plots"])
+                    plot_debug=plot_opts["mintime_plots"],
+                    closed=pars["closed"])
 
     # replace a_interp if necessary
     if a_interp_tmp is not None:
@@ -388,7 +391,8 @@ raceline_interp, a_opt, coeffs_x_opt, coeffs_y_opt, spline_inds_opt_interp, t_va
     create_raceline(refline=reftrack_interp[:, :2],
                     normvectors=normvec_normalized_interp,
                     alpha=alpha_opt,
-                    stepsize_interp=pars["stepsize_opts"]["stepsize_interp_after_opt"])
+                    stepsize_interp=pars["stepsize_opts"]["stepsize_interp_after_opt"],
+                    closed=pars["closed"])
 
 # ----------------------------------------------------------------------------------------------------------------------
 # CALCULATE HEADING AND CURVATURE --------------------------------------------------------------------------------------
@@ -409,7 +413,10 @@ if opt_type == 'mintime' and not mintime_opts["recalc_vel_profile_by_tph"]:
     # interpolation
     s_splines = np.cumsum(spline_lengths_opt)
     s_splines = np.insert(s_splines, 0, 0.0)
-    vx_profile_opt = np.interp(s_points_opt_interp, s_splines[:-1], v_opt)
+    if pars["closed"]:
+        vx_profile_opt = np.interp(s_points_opt_interp, s_splines[:-1], v_opt)
+    else:
+        vx_profile_opt = np.interp(s_points_opt_interp, s_splines, v_opt)
 
 else:
     vx_profile_opt = tph.calc_vel_profile.\

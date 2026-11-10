@@ -15,7 +15,8 @@ def result_plots_mintime(pars: dict,
                          atot: np.ndarray,
                          tf: np.ndarray,
                          ec: np.ndarray,
-                         pwr: dict = None) -> None:
+                         pwr: dict = None,
+                         closed: bool = True) -> None:
 
     """
     Created by:
@@ -169,7 +170,10 @@ def result_plots_mintime(pars: dict,
         plt.figure(3)
         plt.clf()
         plt.plot(s, n)
-        reftrack_cl = np.vstack((reftrack, reftrack[0, :]))
+        if closed:
+            reftrack_cl = np.vstack((reftrack, reftrack[0, :]))
+        else:
+            reftrack_cl = reftrack
         plt.plot(s, reftrack_cl[:, 3], color='black')
         plt.plot(s, reftrack_cl[:, 3] - pars["optim_opts"]["width_opt"] / 2, color='grey')
         plt.plot(s, -reftrack_cl[:, 2], color='black')

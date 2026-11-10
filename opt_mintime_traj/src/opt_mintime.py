@@ -21,7 +21,8 @@ def opt_mintime(reftrack: np.ndarray,
                 tpadata_path: str,
                 export_path: str,
                 print_debug: bool = False,
-                plot_debug: bool = False) -> tuple:
+                plot_debug: bool = False,
+                closed: bool = True) -> tuple:
     """
     Created by:
     Fabian Christ
@@ -75,8 +76,11 @@ def opt_mintime(reftrack: np.ndarray,
                                                                      eps_kappa=pars["optim_opts"]["eps_kappa"],
                                                                      step_non_reg=pars["optim_opts"]["step_non_reg"])
 
-        # relcalculate splines
-        refpath_cl = np.vstack((reftrack[:, :2], reftrack[0, :2]))
+        # recalculate splines
+        if closed:
+            refpath_cl = np.vstack((reftrack[:, :2], reftrack[0, :2]))
+        else:
+            refpath_cl = reftrack
         coeffs_x, coeffs_y, a_interp, normvectors = tph.calc_splines.calc_splines(path=refpath_cl)
 
     else:
@@ -102,10 +106,16 @@ def opt_mintime(reftrack: np.ndarray,
                            stepsize_psi_review=pars["curv_calc_opts"]["d_review_head"])[1]
 
     # close track
-    kappa_refline_cl = np.append(kappa_refline, kappa_refline[0])
-    discr_points_cl = np.append(discr_points, no_points_orig)  # add virtual index of last/first point for closed track
-    w_tr_left_cl = np.append(reftrack[:, 3], reftrack[0, 3])
-    w_tr_right_cl = np.append(reftrack[:, 2], reftrack[0, 2])
+    if closed:
+        kappa_refline_cl = np.append(kappa_refline, kappa_refline[0])
+        discr_points_cl = np.append(discr_points, no_points_orig)  # add virtual index of last/first point for closed track
+        w_tr_left_cl = np.append(reftrack[:, 3], reftrack[0, 3])
+        w_tr_right_cl = np.append(reftrack[:, 2], reftrack[0, 2])
+    else:
+        kappa_refline_cl = kappa_refline
+        discr_points_cl = discr_points
+        w_tr_left_cl = reftrack[:, 3]
+        w_tr_right_cl = reftrack[:, 2]
 
     # step size along the reference line
     h = pars["stepsize_opts"]["stepsize_reg"]
@@ -975,8 +985,12 @@ def opt_mintime(reftrack: np.ndarray,
     t_opt = np.array(np.hstack((0.0, np.cumsum(dt_opt))))
 
     # solution for acceleration
-    ax_opt = np.array(np.append(ax_opt[-1], ax_opt))
-    ay_opt = np.array(np.append(ay_opt[-1], ay_opt))
+    if closed:
+        ax_opt = np.array(np.append(ax_opt[-1], ax_opt))
+        ay_opt = np.array(np.append(ay_opt[-1], ay_opt))
+    else:
+        ax_opt = np.array(np.append(0, ax_opt))
+        ay_opt = np.array(np.append(0, ay_opt))
     atot_opt = np.sqrt(np.power(ax_opt, 2) + np.power(ay_opt, 2))
 
     # solution for energy consumption
@@ -1018,7 +1032,8 @@ def opt_mintime(reftrack: np.ndarray,
                                                                        atot=atot_opt,
                                                                        tf=tf_opt,
                                                                        ec=ec_opt_cum,
-                                                                       pwr=pwr_comps)
+                                                                       pwr=pwr_comps,
+                                                                       closed=closed)
 
     if print_debug:
         print("INFO: Laptime: %.3fs" % t_opt[-1])
@@ -1029,7 +1044,10 @@ def opt_mintime(reftrack: np.ndarray,
         print("INFO: Maximum total acc: %.2fm/s2" % np.amax(atot_opt))
         print('INFO: Energy consumption: %.3fWh' % ec_opt_cum[-1])
 
-    return -x_opt[:-1, 3], x_opt[:-1, 0], reftrack, a_interp, normvectors
+    if closed:
+        return -x_opt[:-1, 3], x_opt[:-1, 0], reftrack, a_interp, normvectors
+    else:
+        return -x_opt[:, 3], x_opt[:, 0], reftrack, a_interp, normvectors
 
 
 # testing --------------------------------------------------------------------------------------------------------------

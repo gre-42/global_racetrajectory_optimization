@@ -8,7 +8,8 @@ def prep_track(reftrack_imp: np.ndarray,
                reg_smooth_opts: dict,
                stepsize_opts: dict,
                debug: bool = True,
-               min_width: float = None) -> tuple:
+               min_width: float = None,
+               closed: bool = True) -> tuple:
     """
     Created by:
     Alexander Heilmeier
@@ -42,7 +43,8 @@ def prep_track(reftrack_imp: np.ndarray,
                              s_reg=reg_smooth_opts["s_reg"],
                              stepsize_prep=stepsize_opts["stepsize_prep"],
                              stepsize_reg=stepsize_opts["stepsize_reg"],
-                             debug=debug)
+                             debug=debug,
+                             closed=closed)
 
     # calculate splines
     refpath_interp_cl = np.vstack((reftrack_interp[:, :2], reftrack_interp[0, :2]))
