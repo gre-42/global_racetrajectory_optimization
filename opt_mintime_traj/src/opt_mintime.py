@@ -824,14 +824,20 @@ def opt_mintime(reftrack: np.ndarray,
             batt.p_losses_opt.extend(batt.f_nlp(Xk, Uk))
             radiators.temps_opt.extend(radiators.f_nlp(Xk, Uk))
 
-    # boundary constraint: start states = final states
-    g.append(w[0] - Xk)
-    if pars["pwr_params_mintime"]["pwr_behavior"]:
-        lbg.append([0.0, 0.0, 0.0, 0.0, 0.0, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf])
-        ubg.append([0.0, 0.0, 0.0, 0.0, 0.0, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf])
+    if closed:
+        # boundary constraint: start states = final states
+        g.append(w[0] - Xk)
     else:
-        lbg.append([0.0, 0.0, 0.0, 0.0, 0.0])
-        ubg.append([0.0, 0.0, 0.0, 0.0, 0.0])
+        g.append(w[0])
+        g.append(Xk)
+    if pars["pwr_params_mintime"]["pwr_behavior"]:
+        for i in range(2 - int(closed)):
+            lbg.append([0.0, 0.0, 0.0, 0.0, 0.0, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf])
+            ubg.append([0.0, 0.0, 0.0, 0.0, 0.0, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf])
+    else:
+        for i in range(2 - int(closed)):
+            lbg.append([0.0] * nx)
+            ubg.append([0.0] * nx)
 
     # path constraint: limited energy consumption
     if pars["optim_opts"]["limit_energy"]:
