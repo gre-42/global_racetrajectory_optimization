@@ -99,7 +99,7 @@ def opt_mintime(reftrack: np.ndarray,
     kappa_refline = tph.calc_head_curv_num. \
         calc_head_curv_num(path=reftrack[:, :2],
                            el_lengths=spline_lengths_refline,
-                           is_closed=True,
+                           is_closed=closed,
                            stepsize_curv_preview=pars["curv_calc_opts"]["d_preview_curv"],
                            stepsize_curv_review=pars["curv_calc_opts"]["d_review_curv"],
                            stepsize_psi_preview=pars["curv_calc_opts"]["d_preview_head"],

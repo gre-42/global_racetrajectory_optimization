@@ -425,7 +425,7 @@ else:
                          v_max=pars["veh_params"]["v_max"],
                          kappa=kappa_opt,
                          el_lengths=el_lengths_opt_interp,
-                         closed=True,
+                         closed=pars["closed"],
                          filt_window=pars["vel_calc_opts"]["vel_profile_conv_filt_window"],
                          dyn_model_exp=pars["vel_calc_opts"]["dyn_model_exp"],
                          drag_coeff=pars["veh_params"]["dragcoeff"],
@@ -496,7 +496,7 @@ if lap_time_mat_opts["use_lap_time_mat"]:
                                  el_lengths=el_lengths_opt_interp,
                                  dyn_model_exp=pars["vel_calc_opts"]["dyn_model_exp"],
                                  filt_window=pars["vel_calc_opts"]["vel_profile_conv_filt_window"],
-                                 closed=True,
+                                 closed=pars["closed"],
                                  drag_coeff=pars["veh_params"]["dragcoeff"],
                                  m_veh=pars["veh_params"]["mass"])
 
@@ -531,8 +531,11 @@ trajectory_opt = np.column_stack((s_points_opt_interp,
 spline_data_opt = np.column_stack((spline_lengths_opt, coeffs_x_opt, coeffs_y_opt))
 
 # create a closed race trajectory array
-traj_race_cl = np.vstack((trajectory_opt, trajectory_opt[0, :]))
-traj_race_cl[-1, 0] = np.sum(spline_data_opt[:, 0])  # set correct length
+if closed:
+    traj_race_cl = np.vstack((trajectory_opt, trajectory_opt[0, :]))
+    traj_race_cl[-1, 0] = np.sum(spline_data_opt[:, 0])  # set correct length
+else:
+    traj_race_cl = trajectory_opt
 
 # print end time
 print("INFO: Runtime from import to final trajectory was %.2fs" % (time.perf_counter() - t_start))
