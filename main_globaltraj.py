@@ -531,7 +531,7 @@ trajectory_opt = np.column_stack((s_points_opt_interp,
 spline_data_opt = np.column_stack((spline_lengths_opt, coeffs_x_opt, coeffs_y_opt))
 
 # create a closed race trajectory array
-if closed:
+if pars["closed"]:
     traj_race_cl = np.vstack((trajectory_opt, trajectory_opt[0, :]))
     traj_race_cl[-1, 0] = np.sum(spline_data_opt[:, 0])  # set correct length
 else:
