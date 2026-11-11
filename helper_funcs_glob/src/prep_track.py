@@ -47,7 +47,10 @@ def prep_track(reftrack_imp: np.ndarray,
                              closed=closed)
 
     # calculate splines
-    refpath_interp_cl = np.vstack((reftrack_interp[:, :2], reftrack_interp[0, :2]))
+    if closed:
+        refpath_interp_cl = np.vstack((reftrack_interp[:, :2], reftrack_interp[0, :2]))
+    else:
+        refpath_interp_cl = reftrack_interp[:, :2]
 
     coeffs_x_interp, coeffs_y_interp, a_interp, normvec_normalized_interp = tph.calc_splines.\
         calc_splines(path=refpath_interp_cl)
@@ -58,7 +61,8 @@ def prep_track(reftrack_imp: np.ndarray,
 
     normals_crossing = tph.check_normals_crossing.check_normals_crossing(track=reftrack_interp,
                                                                          normvec_normalized=normvec_normalized_interp,
-                                                                         horizon=10)
+                                                                         horizon=10,
+                                                                         closed=closed)
 
     if normals_crossing:
         bound_1_tmp = reftrack_interp[:, :2] + normvec_normalized_interp * np.expand_dims(reftrack_interp[:, 2], axis=1)
