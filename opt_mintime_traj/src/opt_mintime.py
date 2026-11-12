@@ -80,7 +80,7 @@ def opt_mintime(reftrack: np.ndarray,
         if closed:
             refpath_cl = np.vstack((reftrack[:, :2], reftrack[0, :2]))
         else:
-            refpath_cl = reftrack
+            refpath_cl = reftrack[:, :2]
         coeffs_x, coeffs_y, a_interp, normvectors = tph.calc_splines.calc_splines(path=refpath_cl)
 
     else:
