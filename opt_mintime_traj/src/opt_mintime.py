@@ -827,17 +827,23 @@ def opt_mintime(reftrack: np.ndarray,
     if closed:
         # boundary constraint: start states = final states
         g.append(w[0] - Xk)
-    else:
-        g.append(w[0])
-        g.append(Xk)
-    if pars["pwr_params_mintime"]["pwr_behavior"]:
-        for i in range(2 - int(closed)):
+        if pars["pwr_params_mintime"]["pwr_behavior"]:
             lbg.append([0.0, 0.0, 0.0, 0.0, 0.0, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf])
             ubg.append([0.0, 0.0, 0.0, 0.0, 0.0, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf])
-    else:
-        for i in range(2 - int(closed)):
+        else:
             lbg.append([0.0] * nx)
             ubg.append([0.0] * nx)
+    else:
+        # Initial state: standing start (v = v_min, since v = 0 would result in division by zero),
+        # sideslip angle = 0, yaw rate = 0, starting at the center of the track (n = 0), parallel to the track (xi = 0).
+        # Final state (Xk) remains unconstrained.
+        g.append(w[0])
+        if pars["pwr_params_mintime"]["pwr_behavior"]:
+            lbg.append([v_min, 0.0, 0.0, 0.0, 0.0, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf])
+            ubg.append([v_min, 0.0, 0.0, 0.0, 0.0, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf])
+        else:
+            lbg.append([v_min, 0.0, 0.0, 0.0, 0.0])
+            ubg.append([v_min, 0.0, 0.0, 0.0, 0.0])
 
     # path constraint: limited energy consumption
     if pars["optim_opts"]["limit_energy"]:
